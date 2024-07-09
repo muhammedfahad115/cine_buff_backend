@@ -1,5 +1,7 @@
 const User = require("../Models/UserSchema");
 const bcrypt = require("bcrypt");
+const Jwt = require("jsonwebtoken");
+
 const UserObject = {
     SignUp : async (req, res) => {
         const { name, email, password } = req.body;
@@ -15,7 +17,8 @@ const UserObject = {
             password: hashedPassword,
         })
         newUser.save();
-        return res.status(201).json({ message: "User created successfully" });
+        const token = Jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        return res.status(201).json({ message: "User created successfully", token: token });
     },
 
     Login : async (req, res) => {
@@ -30,7 +33,8 @@ const UserObject = {
             console.log("Invalid password");
             return res.status(400).json({ error: "Invalid password" });
         }
-        return res.status(200).json({ message: "Login successful" });
+        const token = Jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        return res.status(200).json({ message: "Login successful", token: token });
     }
 }
 
