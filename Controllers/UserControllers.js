@@ -57,10 +57,11 @@ const UserObject = {
             const workbook = xlsx.readFile(filePath);
 
             const sheetNames = workbook.SheetNames;
+            // loop to iterate through each sheet in the workbook
             for (const sheetName of sheetNames) {
                 const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
                 const collectionName = sheetName.replace(/\s/g, '');
-
+                // check if the collection already exists in the database and if not, create it
                 if (mongoose.connection.models[collectionName]) {
                     console.log(`Collection '${collectionName}' already exists.`);
                 } else {
