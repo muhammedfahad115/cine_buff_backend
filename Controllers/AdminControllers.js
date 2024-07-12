@@ -33,7 +33,36 @@ const AdminObject = {
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
-    }
+    },
+    getRationales: async (req, res) => {
+        const { page = 1, limit = 10 } = req.query;
+        try {
+            const rationales = await Rationale.find()
+                .skip((page - 1) * limit)
+                .limit(parseInt(limit));
+            const count = await Rationale.countDocuments();
+            res.json({
+                rationales,
+                totalPages: Math.ceil(count / limit),
+                currentPage: parseInt(page),
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    },
+    editRationale:  async (req, res) => {
+        try {
+            const rationale = await Rationale.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            return res.status(200).json({ message: "Rationale updated successfully", rationale: rationale });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    },
+    searchRationales: async (req, res) => {
+        const { query } = req.query;
+        const rationales = await Rationale.find({ RationaleText: { $regex: `^${query}`, $options: 'i' } });
+        res.json({ rationales });
+      }
 }
 
 module.exports = AdminObject;
