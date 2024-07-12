@@ -1,4 +1,5 @@
 const Rationale = require('../Models/RationaleSchema');
+const User = require('../Models/UserSchema');
 
 const AdminObject = {
     AddRationale: async (req, res) => {
@@ -15,6 +16,22 @@ const AdminObject = {
         } catch (error) {
             console.error('Error:', error.message);
             return res.status(500).json({ error: 'Failed to add rationale' });
+        }
+    },
+    getUsers: async (req, res) => {
+        const { page = 1, limit = 10 } = req.query;
+        try {
+            const users = await User.find()
+                .skip((page - 1) * limit)
+                .limit(parseInt(limit));
+            const count = await User.countDocuments();
+            res.json({
+                users,
+                totalPages: Math.ceil(count / limit),
+                currentPage: parseInt(page),
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
     }
 }
