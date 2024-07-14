@@ -4,6 +4,9 @@ const Jwt = require("jsonwebtoken");
 const xlsx = require("xlsx");
 const fs = require("fs");
 const mongoose = require("mongoose");
+const MedicalBill = require("../Models/MedicalBillSchema");
+const SpecialityList = require("../Models/RationelsSpecialities");
+const Rationale = require("../Models/RationaleSchema");
 
 
 const UserObject = {
@@ -81,7 +84,99 @@ const UserObject = {
         } finally {
             console.log('Process completed.');
         }
-    }
+    },
+    getMedicalBills: async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        try {
+            const skip = (page - 1) * limit;
+            const medicalBills = await MedicalBill.find({billStatus: 'Pending'})
+                .skip(skip)
+                .limit(limit);
+            const totalCount = await MedicalBill.countDocuments();
+
+            return res.status(200).json({
+                message: "Medical bills fetched successfully",
+                medicalBills,
+                totalCount,
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit)
+            });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    denyRationales: async (req, res) => {
+        try {
+          const { specialtyCode } = req.query;
+      
+          const specialties = await SpecialityList.aggregate([
+            { $match: { SpecialtyCode: specialtyCode, Enable: '0' } },
+            {
+              $lookup: {
+                from: 'rationales',
+                localField: 'RationaleID',
+                foreignField: 'RationaleID',
+                as: 'rationaleDetails'
+              }
+            },
+            { $unwind: '$rationaleDetails' },
+            {
+              $group: {
+                _id: '$SpecialtyCode',
+                rationales: { $push: '$rationaleDetails' }
+              }
+            }
+          ]);
+      
+          if (!specialties || specialties.length === 0) {
+            return res.status(404).json({ error: `Specialty with code ${specialtyCode} not found or no enabled specialties found.` });
+          }
+      
+          const rationales = specialties[0].rationales;
+      
+          if (!rationales || rationales.length === 0) {
+            return res.status(404).json({ error: 'Rationales not found.' });
+          }
+      
+          return res.status(200).json({ message: 'Rationales fetched successfully', rationales });
+        } catch (error) {
+          console.error('Error fetching deniable rationales:', error);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      },
+      confirmDenyBill : async (req, res) => {
+        try {
+          const { billId, denyReason } = req.body;
+          console.log('billId:', billId, 'denyReason:', denyReason);
+          const bill = await MedicalBill.findById(billId);
+          if (!bill) {
+            return res.status(404).json({ error: 'Bill not found' });
+          }
+          bill.billStatus = 'Denied';
+          await bill.save();
+          return res.status(200).json({ message: 'Bill denied successfully' });
+        } catch (error) {
+          console.error('Error denying bill:', error);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      },
+      confirmApproveBill : async (req, res) => {
+        try {
+          const { billId } = req.body;
+          const bill = await MedicalBill.findById(billId);
+          if (!bill) {
+            return res.status(404).json({ error: 'Bill not found' });
+          }
+          bill.billStatus = 'Approved';
+          await bill.save();
+          return res.status(200).json({ message: 'Bill approved successfully' });
+        } catch (error) {
+          console.error('Error approving bill:', error);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      }
 }
 
 module.exports = UserObject

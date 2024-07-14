@@ -1,15 +1,29 @@
 const Rationale = require('../Models/RationaleSchema');
 const User = require('../Models/UserSchema');
+const SpecialtyCode = require('../Models/SpecialtyCode');
+const MedicalBill = require('../Models/MedicalBillSchema');
+
 
 const AdminObject = {
     AddRationale: async (req, res) => {
+        const {decisionType,groupId,module,rationale,rationaleId,rationaleSummary,sequence,specialtyCode} = req.body;
         try {
-            const checkRationaleId = await Rationale.findOne({ RationaleID: req.body.RationaleID });
+            const checkRationaleId = await Rationale.findOne({ RationaleID: req.body.rationaleId });
             if (checkRationaleId) {
+                console.log(checkRationaleId, 'checkRationaleId');
                 return res.status(400).json({ error: "Rationale already exists" });
             } else {
                 console.log('new rationale');
-                const newRationale = new Rationale(req.body);
+                const newRationale = new Rationale({
+                    Enable: decisionType,
+                    GroupID: groupId,
+                    Module: module,
+                    RationaleText: rationale,
+                    RationaleID: rationaleId,
+                    RationaleSummary: rationaleSummary,
+                    Sequence: sequence,
+                    SpecialtyCode: specialtyCode
+                });
                 await newRationale.save();
                 return res.status(200).json({ message: "Rationale added successfully" });
             }
@@ -50,7 +64,7 @@ const AdminObject = {
             res.status(500).json({ error: err.message });
         }
     },
-    editRationale:  async (req, res) => {
+    editRationale: async (req, res) => {
         try {
             const rationale = await Rationale.findByIdAndUpdate(req.params.id, req.body, { new: true });
             return res.status(200).json({ message: "Rationale updated successfully", rationale: rationale });
@@ -60,9 +74,46 @@ const AdminObject = {
     },
     searchRationales: async (req, res) => {
         const { query } = req.query;
+       try {
         const rationales = await Rationale.find({ RationaleText: { $regex: `^${query}`, $options: 'i' } });
-        res.json({ rationales });
-      }
+        return res.json({ rationales });
+       } catch (error) {
+        return res.status(500).json({ error: error.message });
+       }
+    },
+    getSpecialtyCodes: async (req, res) => {
+     try {
+        const fetchSpecialtyCodes = await SpecialtyCode.find();
+        return res.status(200).json({ message: "Specialty Codes fetched successfully", specialtyCodes: fetchSpecialtyCodes });
+     } catch (error) {
+        return res.status(500).json({ error: error.message });
+     }
+    },
+    addMedicalBill: async (req, res) => {
+        const {patientName, procedureCode, procedureDescription, cost, dateOfService, doctorName, specialtyCode, phoneNumber} = req.body;
+        try {
+            const existingBill = await MedicalBill.findOne({ phoneNumber: req.body.phoneNumber });
+            if (existingBill) {
+                return res.status(400).json({ error: "Bill already exists" });
+            } else {
+                const newBill = new MedicalBill({ 
+                    patientName: patientName,
+                    procedureCode: procedureCode,
+                    procedureDescription: procedureDescription,
+                    cost: cost,
+                    dateOfService: dateOfService,
+                    doctorName: doctorName,
+                    specialtyCode: specialtyCode,
+                    phoneNumber: phoneNumber
+                });
+                await newBill.save();
+                return res.status(200).json({ message: "Bill added successfully" });
+            }
+
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = AdminObject;
