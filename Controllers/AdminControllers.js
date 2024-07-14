@@ -5,6 +5,7 @@ const MedicalBill = require('../Models/MedicalBillSchema');
 
 
 const AdminObject = {
+    // function to add rationale //
     AddRationale: async (req, res) => {
         const {decisionType,groupId,module,rationale,rationaleId,rationaleSummary,sequence,specialtyCode} = req.body;
         try {
@@ -32,6 +33,7 @@ const AdminObject = {
             return res.status(500).json({ error: 'Failed to add rationale' });
         }
     },
+    // function to get users with pagination //
     getUsers: async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
         try {
@@ -48,6 +50,7 @@ const AdminObject = {
             res.status(500).json({ error: err.message });
         }
     },
+    // function to get rationale with pagination //
     getRationales: async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
         try {
@@ -64,6 +67,7 @@ const AdminObject = {
             res.status(500).json({ error: err.message });
         }
     },
+    // function to edit rationale //
     editRationale: async (req, res) => {
         try {
             const rationale = await Rationale.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -72,6 +76,7 @@ const AdminObject = {
             res.status(500).json({ error: err.message });
         }
     },
+    // function to continous search rationale //
     searchRationales: async (req, res) => {
         const { query } = req.query;
        try {
@@ -81,6 +86,7 @@ const AdminObject = {
         return res.status(500).json({ error: error.message });
        }
     },
+    // function to get specialty codes //
     getSpecialtyCodes: async (req, res) => {
      try {
         const fetchSpecialtyCodes = await SpecialtyCode.find();
@@ -89,6 +95,7 @@ const AdminObject = {
         return res.status(500).json({ error: error.message });
      }
     },
+    // function to add medical bill //
     addMedicalBill: async (req, res) => {
         const {patientName, procedureCode, procedureDescription, cost, dateOfService, doctorName, specialtyCode, phoneNumber} = req.body;
         try {
@@ -114,6 +121,7 @@ const AdminObject = {
             return res.status(500).json({ error: error.message });
         }
     },
+    // function to get all medical bills with pagination //
     getAllMedicalBills : async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
         try {

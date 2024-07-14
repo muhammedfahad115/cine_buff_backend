@@ -10,6 +10,7 @@ const Rationale = require("../Models/RationaleSchema");
 
 
 const UserObject = {
+    // function for user signup //
     SignUp: async (req, res) => {
         const { name, email, password } = req.body;
         const existingUser = await User.findOne({ email: email });
@@ -28,6 +29,7 @@ const UserObject = {
         return res.status(201).json({ message: "User created successfully", token: token });
     },
 
+    // function for user login //
     Login: async (req, res) => {
         const { email, password } = req.body;
         const existingUser = await User.findOne({ email: email });
@@ -43,6 +45,8 @@ const UserObject = {
         const token = Jwt.sign({ id: existingUser._id, role: existingUser.role, name: existingUser.name }, process.env.JWT_SECRET, { expiresIn: "1h" });
         return res.status(200).json({ message: "Login successful", token: token });
     },
+
+    // function for fetching user profile //
     Profile: async (req, res) => {
         const { id } = req.user;
         const user = await User.findById(id);
@@ -85,6 +89,7 @@ const UserObject = {
             console.log('Process completed.');
         }
     },
+    //  function for fetching medical bills with skip and limit //
     getMedicalBills: async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -107,10 +112,12 @@ const UserObject = {
             return res.status(500).json({ error: error.message });
         }
     },
+    // function for denying rationales //
     denyRationales: async (req, res) => {
         try {
           const { specialtyCode } = req.query;
       
+          // lookup for rationales based on specialty code and enable is 0 in the Rationales collection in the database //
           const specialties = await SpecialityList.aggregate([
             { $match: { SpecialtyCode: specialtyCode, Enable: '0' } },
             {
@@ -146,6 +153,7 @@ const UserObject = {
           res.status(500).json({ error: 'Internal server error' });
         }
       },
+      // function for confirming denying bill //
       confirmDenyBill : async (req, res) => {
         try {
           const { billId, denyReason } = req.body;
@@ -164,6 +172,7 @@ const UserObject = {
           res.status(500).json({ error: 'Internal server error' });
         }
       },
+      // function for confirming approving bill //
       confirmApproveBill : async (req, res) => {
         try {
           const { billId } = req.body;
