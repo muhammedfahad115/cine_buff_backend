@@ -113,6 +113,22 @@ const AdminObject = {
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
+    },
+    getAllMedicalBills : async (req, res) => {
+        const { page = 1, limit = 10 } = req.query;
+        try {
+            const medicalBills = await MedicalBill.find()
+                .skip((page - 1) * limit)
+                .limit(parseInt(limit));
+            const count = await MedicalBill.countDocuments();
+            res.status(200).json({
+                medicalBills,
+                totalPages: Math.ceil(count / limit),
+                currentPage: parseInt(page),
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 }
 

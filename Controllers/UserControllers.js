@@ -40,7 +40,7 @@ const UserObject = {
             console.log("Invalid password");
             return res.status(400).json({ error: "Invalid password" });
         }
-        const token = Jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = Jwt.sign({ id: existingUser._id, role: existingUser.role, name: existingUser.name }, process.env.JWT_SECRET, { expiresIn: "1h" });
         return res.status(200).json({ message: "Login successful", token: token });
     },
     Profile: async (req, res) => {
@@ -155,6 +155,8 @@ const UserObject = {
             return res.status(404).json({ error: 'Bill not found' });
           }
           bill.billStatus = 'Denied';
+          bill.denyReason = denyReason;
+          bill.person = req.user.name;
           await bill.save();
           return res.status(200).json({ message: 'Bill denied successfully' });
         } catch (error) {
@@ -170,6 +172,7 @@ const UserObject = {
             return res.status(404).json({ error: 'Bill not found' });
           }
           bill.billStatus = 'Approved';
+          bill.person = req.user.name;
           await bill.save();
           return res.status(200).json({ message: 'Bill approved successfully' });
         } catch (error) {

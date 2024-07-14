@@ -10,6 +10,9 @@ const MedicalBillSchema = new mongoose.Schema({
       specialtyCode: {type: String, required: true},
       phoneNumber: {type: Number, required: true},
       billStatus: {default: "Pending", type: String, required: true},
+      person: {default: "User", type: String, required: false},
+      denyReason: {type: String, required: false},
+
 }, { strict: false });
 
 const MedicalBill = new mongoose.model("medicalbills", MedicalBillSchema);
